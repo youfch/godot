@@ -2242,7 +2242,12 @@ SceneTreeEditor::~SceneTreeEditor() {
 void SceneTreeDialog::popup_scenetree_dialog(Node *p_selected_node, Node *p_marked_node, bool p_marked_node_selectable, bool p_marked_node_children_selectable) {
 	get_scene_tree()->set_marked(p_marked_node, p_marked_node_selectable, p_marked_node_children_selectable);
 	get_scene_tree()->set_selected(p_selected_node);
-	popup_centered_clamped(Size2(350, 700) * EDSCALE);
+	Rect2i saved_rect = EditorSettings::get_singleton()->get_project_metadata("dialog_bounds", "scene_tree_dialog", Rect2i());
+	if (saved_rect != Rect2i()) {
+		popup(saved_rect);
+	} else {
+		popup_centered_clamped(Size2(350, 700) * EDSCALE);
+	}
 }
 
 void SceneTreeDialog::_show_all_nodes_changed(bool p_button_pressed) {
@@ -2321,6 +2326,8 @@ void SceneTreeDialog::_notification(int p_what) {
 
 				// Select the search bar by default.
 				callable_mp((Control *)filter, &Control::grab_focus).call_deferred(false);
+			} else {
+				EditorSettings::get_singleton()->set_project_metadata("dialog_bounds", "scene_tree_dialog", Rect2i(get_position(), get_size()));
 			}
 		} break;
 

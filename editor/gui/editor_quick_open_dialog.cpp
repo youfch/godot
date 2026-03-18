@@ -139,6 +139,16 @@ EditorQuickOpenDialog::EditorQuickOpenDialog() {
 	get_ok_button()->hide();
 }
 
+void EditorQuickOpenDialog::_notification(int p_what) {
+	switch (p_what) {
+		case NOTIFICATION_VISIBILITY_CHANGED: {
+			if (!is_visible()) {
+				EditorSettings::get_singleton()->set_project_metadata("dialog_bounds", "quick_open", Rect2(get_position(), get_size()));
+			}
+		} break;
+	}
+}
+
 String EditorQuickOpenDialog::get_dialog_title(const Vector<StringName> &p_base_types) {
 	if (p_base_types.size() > 1) {
 		return TTR("Select Resource");
@@ -186,7 +196,12 @@ void EditorQuickOpenDialog::popup_dialog_for_property(const Vector<StringName> &
 void EditorQuickOpenDialog::_finish_dialog_setup(const Vector<StringName> &p_base_types) {
 	get_ok_button()->set_disabled(container->has_nothing_selected());
 	set_title(get_dialog_title(p_base_types));
-	popup_centered_clamped(Size2(780, 650) * EDSCALE, 0.8f);
+	Rect2i saved_size = EditorSettings::get_singleton()->get_project_metadata("dialog_bounds", "quick_open", Rect2i());
+	if (saved_size != Rect2i()) {
+		popup(saved_size);
+	} else {
+		popup_centered_clamped(Size2(780, 650) * EDSCALE, 0.8f);
+	}
 	search_box->grab_focus();
 }
 
