@@ -34,21 +34,18 @@
 #include "core/io/marshalls.h"
 #include "core/object/class_db.h"
 #include "core/object/object.h"
-#include "core/variant/variant.h"
 #include "editor/docks/inspector_dock.h"
 #include "editor/editor_node.h"
 #include "editor/editor_string_names.h"
 #include "editor/file_system/editor_file_system.h"
 #include "editor/gui/editor_spin_slider.h"
 #include "editor/gui/editor_variant_type_selectors.h"
-#include "editor/inspector/editor_inspector.h"
 #include "editor/inspector/editor_properties.h"
 #include "editor/inspector/editor_properties_vector.h"
 #include "editor/settings/editor_settings.h"
 #include "editor/themes/editor_scale.h"
 #include "scene/gui/button.h"
 #include "scene/gui/margin_container.h"
-#include "scene/main/node.h"
 
 bool EditorPropertyArrayObject::_set(const StringName &p_name, const Variant &p_value) {
 	String name = p_name;
