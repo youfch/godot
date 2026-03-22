@@ -43,6 +43,7 @@
 #include "scene/main/instance_placeholder.h"
 #include "scene/main/missing_node.h"
 #include "scene/property_utils.h"
+#include "scene/resources/node_binding.h"
 
 #ifndef _3D_DISABLED
 #include "scene/3d/node_3d.h"
@@ -428,9 +429,17 @@ Node *SceneState::instantiate(GenEditState p_edit_state) const {
 						Variant value = props[nprops[j].value];
 
 						if (value.get_type() == Variant::OBJECT) {
+							NodeBinding *binding = Object::cast_to<NodeBinding>(value.get_validated_object());
+
 							//handle resources that are local to scene by duplicating them if needed
 							Ref<Resource> res = value;
-							if (res.is_valid()) {
+							if (binding) {
+								DeferredNodePathProperties dnp;
+								dnp.value = binding;
+								dnp.base = node->get_instance_id();
+								dnp.property = snames[n.name];
+								deferred_node_paths.push_back(dnp);
+							} else if (res.is_valid()) {
 								value = make_local_resource(value, n, resources_local_to_sub_scene, node, snames[nprops[j].name], resources_local_to_scene, i, ret_nodes, p_edit_state);
 							}
 						} else {
@@ -442,7 +451,6 @@ Node *SceneState::instantiate(GenEditState p_edit_state) const {
 						}
 
 						if (value.get_type() == Variant::ARRAY) {
-
 							Array set_array = value;
 							bool is_get_valid = false;
 							Variant get_value = node->get(snames[nprops[j].name], &is_get_valid);
@@ -456,7 +464,15 @@ Node *SceneState::instantiate(GenEditState p_edit_state) const {
 								}
 							}
 
-							value = setup_resources_in_array(set_array, n, resources_local_to_sub_scene, node, snames[nprops[j].name], resources_local_to_scene, i, ret_nodes, p_edit_state);
+							bool has_bindings;
+							value = setup_resources_in_array(set_array, n, resources_local_to_sub_scene, node, snames[nprops[j].name], resources_local_to_scene, i, ret_nodes, p_edit_state, has_bindings);
+							if (has_bindings) {
+								DeferredNodePathProperties dnp;
+								dnp.value = value;
+								dnp.base = node->get_instance_id();
+								dnp.property = snames[nprops[j].name];
+								deferred_node_paths.push_back(dnp);
+							}
 						}
 
 						if (value.get_type() == Variant::DICTIONARY) {
@@ -473,7 +489,15 @@ Node *SceneState::instantiate(GenEditState p_edit_state) const {
 								}
 							}
 
-							value = setup_resources_in_dictionary(set_dict, n, resources_local_to_sub_scene, node, snames[nprops[j].name], resources_local_to_scene, i, ret_nodes, p_edit_state);
+							bool has_bindings;
+							value = setup_resources_in_dictionary(set_dict, n, resources_local_to_sub_scene, node, snames[nprops[j].name], resources_local_to_scene, i, ret_nodes, p_edit_state, has_bindings);
+							if (has_bindings) {
+								DeferredNodePathProperties dnp;
+								dnp.value = value;
+								dnp.base = node->get_instance_id();
+								dnp.property = snames[nprops[j].name];
+								deferred_node_paths.push_back(dnp);
+							}
 						}
 
 						bool set_valid = true;
@@ -598,6 +622,7 @@ Node *SceneState::instantiate(GenEditState p_edit_state) const {
 	for (const DeferredNodePathProperties &dnp : deferred_node_paths) {
 		// Replace properties stored as NodePaths with actual Nodes.
 		Node *base = ObjectDB::get_instance<Node>(dnp.base);
+		NodeBinding *maybe_node_binding = Object::cast_to<NodeBinding>(dnp.value.get_validated_object());
 		ERR_CONTINUE_EDMSG(!base, vformat("Failed to set deferred property '%s' as the base node disappeared.", dnp.property));
 		if (dnp.value.get_type() == Variant::ARRAY) {
 			Array paths = dnp.value;
@@ -605,37 +630,19 @@ Node *SceneState::instantiate(GenEditState p_edit_state) const {
 			bool valid;
 			Array array = base->get(dnp.property, &valid);
 			ERR_CONTINUE_EDMSG(!valid, vformat("Failed to get property '%s' from node '%s'.", dnp.property, base->get_name()));
-			array = array.duplicate();
 
-			array.resize(paths.size());
-			for (int i = 0; i < array.size(); i++) {
-				array.set(i, base->get_node_or_null(paths[i]));
-			}
-			base->set(dnp.property, array);
+			Array new_array = bind_deferred_node_paths_in_array(paths, base, true);
+			base->set(dnp.property, new_array);
 		} else if (dnp.value.get_type() == Variant::DICTIONARY) {
-			Dictionary paths = dnp.value;
-
 			bool valid;
 			Dictionary dict = base->get(dnp.property, &valid);
 			ERR_CONTINUE_EDMSG(!valid, vformat("Failed to get property '%s' from node '%s'.", dnp.property, base->get_name()));
 			dict = dict.duplicate();
-			bool convert_key = dict.get_typed_key_builtin() == Variant::OBJECT &&
-					ClassDB::is_parent_class(dict.get_typed_key_class_name(), "Node");
-			bool convert_value = dict.get_typed_value_builtin() == Variant::OBJECT &&
-					ClassDB::is_parent_class(dict.get_typed_value_class_name(), "Node");
 
-			for (const KeyValue<Variant, Variant> &kv : paths) {
-				Variant key = kv.key;
-				if (convert_key) {
-					key = base->get_node_or_null(key);
-				}
-				Variant value = kv.value;
-				if (convert_value) {
-					value = base->get_node_or_null(value);
-				}
-				dict[key] = value;
-			}
+			dict = bind_deferred_node_paths_in_dictionary(dict, base);
 			base->set(dnp.property, dict);
+		} else if (dnp.value.get_type() == Variant::OBJECT && maybe_node_binding) {
+			base->set(dnp.property, base->get_node_or_null(maybe_node_binding->path));
 		} else {
 			base->set(dnp.property, base->get_node_or_null(dnp.value));
 		}
@@ -729,33 +736,100 @@ Variant SceneState::make_local_resource(Variant &p_value, const SceneState::Node
 	}
 }
 
-Array SceneState::setup_resources_in_array(Array &p_array_to_scan, const SceneState::NodeData &p_n, HashMap<Ref<Resource>, Ref<Resource>> &p_resources_local_to_sub_scene, Node *p_node, const StringName p_sname, HashMap<Ref<Resource>, Ref<Resource>> &p_resources_local_to_scene, int p_i, Node **p_ret_nodes, SceneState::GenEditState p_edit_state) const {
+Array SceneState::setup_resources_in_array(Array &p_array_to_scan, const SceneState::NodeData &p_n, HashMap<Ref<Resource>, Ref<Resource>> &p_resources_local_to_sub_scene, Node *p_node, const StringName p_sname, HashMap<Ref<Resource>, Ref<Resource>> &p_resources_local_to_scene, int p_i, Node **p_ret_nodes, SceneState::GenEditState p_edit_state, bool &r_has_bindings) const {
 	for (int i = 0; i < p_array_to_scan.size(); i++) {
-		if (p_array_to_scan[i].get_type() == Variant::OBJECT) {
+		Variant var = p_array_to_scan[i];
+		if (!r_has_bindings && Object::cast_to<NodeBinding>(var.get_validated_object())) {
+			r_has_bindings = true;
+		} else if (!r_has_bindings && var.get_type() == Variant::ARRAY) {
+			Array nested_array = var;
+			p_array_to_scan[i] = setup_resources_in_array(nested_array, p_n, p_resources_local_to_sub_scene, p_node, p_sname, p_resources_local_to_scene, p_i, p_ret_nodes, p_edit_state, r_has_bindings);
+		} else if (var.get_type() == Variant::DICTIONARY) {
+			Dictionary dict = var;
+			setup_resources_in_dictionary(dict, p_n, p_resources_local_to_sub_scene, p_node, p_sname, p_resources_local_to_scene, p_i, p_ret_nodes, p_edit_state, r_has_bindings);
+		} else if (var.get_type() == Variant::OBJECT) {
 			p_array_to_scan[i] = make_local_resource(p_array_to_scan[i], p_n, p_resources_local_to_sub_scene, p_node, p_sname, p_resources_local_to_scene, p_i, p_ret_nodes, p_edit_state);
 		}
 	}
 	return p_array_to_scan;
 }
 
-Dictionary SceneState::setup_resources_in_dictionary(Dictionary &p_dictionary_to_scan, const SceneState::NodeData &p_n, HashMap<Ref<Resource>, Ref<Resource>> &p_resources_local_to_sub_scene, Node *p_node, const StringName p_sname, HashMap<Ref<Resource>, Ref<Resource>> &p_resources_local_to_scene, int p_i, Node **p_ret_nodes, SceneState::GenEditState p_edit_state) const {
+Array SceneState::bind_deferred_node_paths_in_array(const Array &p_array_to_scan, const Node *p_base_node, bool p_should_bind_paths) const {
+	Array out_array;
+	int array_len = p_array_to_scan.size();
+	out_array.resize(array_len);
+	for (int i = 0; i < array_len; i++) {
+		Variant var = p_array_to_scan[i];
+		out_array.set(i, bind_node_paths(var, p_base_node, p_should_bind_paths));
+	}
+	return out_array;
+}
+
+Dictionary SceneState::setup_resources_in_dictionary(const Dictionary &p_dictionary_to_scan, const SceneState::NodeData &p_n, HashMap<Ref<Resource>, Ref<Resource>> &p_resources_local_to_sub_scene, Node *p_node, const StringName p_sname, HashMap<Ref<Resource>, Ref<Resource>> &p_resources_local_to_scene, int p_i, Node **p_ret_nodes, SceneState::GenEditState p_edit_state, bool &r_has_bindings) const {
+	Dictionary out_dict;
 	const Array keys = p_dictionary_to_scan.keys();
 	const Array values = p_dictionary_to_scan.values();
 
-	if (has_local_resource(values) || has_local_resource(keys)) {
-		Array duplicated_keys = keys.duplicate(true);
-		Array duplicated_values = values.duplicate(true);
+	Array duplicated_keys = keys.duplicate(true);
+	Array duplicated_values = values.duplicate(true);
 
-		duplicated_keys = setup_resources_in_array(duplicated_keys, p_n, p_resources_local_to_sub_scene, p_node, p_sname, p_resources_local_to_scene, p_i, p_ret_nodes, p_edit_state);
-		duplicated_values = setup_resources_in_array(duplicated_values, p_n, p_resources_local_to_sub_scene, p_node, p_sname, p_resources_local_to_scene, p_i, p_ret_nodes, p_edit_state);
-		p_dictionary_to_scan.clear();
+	bool keys_has_bindings;
+	duplicated_keys = setup_resources_in_array(duplicated_keys, p_n, p_resources_local_to_sub_scene, p_node, p_sname, p_resources_local_to_scene, p_i, p_ret_nodes, p_edit_state, keys_has_bindings);
 
-		for (int i = 0; i < keys.size(); i++) {
-			p_dictionary_to_scan[duplicated_keys[i]] = duplicated_values[i];
-		}
+	bool values_has_bindings;
+	duplicated_values = setup_resources_in_array(duplicated_values, p_n, p_resources_local_to_sub_scene, p_node, p_sname, p_resources_local_to_scene, p_i, p_ret_nodes, p_edit_state, values_has_bindings);
+
+	if (keys_has_bindings || values_has_bindings) {
+		r_has_bindings = true;
 	}
 
-	return p_dictionary_to_scan;
+	for (int i = 0; i < keys.size(); i++) {
+		out_dict[duplicated_keys[i]] = duplicated_values[i];
+	}
+	return out_dict;
+}
+
+Dictionary SceneState::bind_deferred_node_paths_in_dictionary(const Dictionary &p_dictionary_to_scan, const Node *p_base_node) const {
+	bool convert_key = p_dictionary_to_scan.get_typed_key_builtin() == Variant::OBJECT &&
+			ClassDB::is_parent_class(p_dictionary_to_scan.get_typed_key_class_name(), "Node");
+	bool convert_value = p_dictionary_to_scan.get_typed_value_builtin() == Variant::OBJECT &&
+			ClassDB::is_parent_class(p_dictionary_to_scan.get_typed_value_class_name(), "Node");
+
+	Dictionary out_dict;
+	for (const KeyValue<Variant, Variant> &kv : p_dictionary_to_scan) {
+		Variant key = kv.key;
+		key = bind_node_paths(key, p_base_node, convert_key);
+
+		Variant value = kv.value;
+		value = bind_node_paths(value, p_base_node, convert_value);
+
+		out_dict[key] = value;
+	}
+	return out_dict;
+}
+
+Variant SceneState::bind_node_paths(const Variant p_var, const Node *p_base_node, bool p_should_bind_paths) const {
+	Variant out_var = p_var;
+	Variant::Type type = p_var.get_type();
+	NodeBinding *maybe_node_binding = Object::cast_to<NodeBinding>(p_var.get_validated_object());
+	if (type == Variant::ARRAY) {
+		Array nested_array = p_var;
+		out_var = bind_deferred_node_paths_in_array(nested_array, p_base_node, p_should_bind_paths);
+	} else if (type == Variant::DICTIONARY) {
+		Dictionary nested_dict = p_var;
+		out_var = bind_deferred_node_paths_in_dictionary(nested_dict, p_base_node);
+	} else if (type == Variant::OBJECT && maybe_node_binding) {
+		Node *bound_node = p_base_node->get_node_or_null(maybe_node_binding->path);
+		if (!bound_node) {
+			ERR_PRINT("Node binding: " + String(maybe_node_binding->path) + " could not be resolved.");
+		}
+		out_var = bound_node;
+	} else if (type == Variant::NODE_PATH && p_should_bind_paths) {
+		NodePath n_path = p_var;
+		Node *bound_node = p_base_node->get_node_or_null(n_path);
+		out_var = bound_node;
+	}
+	return out_var;
 }
 
 bool SceneState::has_local_resource(const Array &p_array) const {
@@ -794,8 +868,10 @@ void SceneState::_parse_array(Array &r_out_array, Node *p_node, const Array &p_o
 		Variant elem = p_orig_array[i];
 
 		if (elem.get_type() == Variant::OBJECT) {
-			if (Node *n = Object::cast_to<Node>(elem)) {
-				r_out_array.push_back(p_node->get_path_to(n));
+			if (Node *n = Object::cast_to<Node>(elem.get_validated_object())) {
+				NodeBinding *binding = memnew(NodeBinding);
+				binding->path = p_node->get_path_to(n);
+				r_out_array.push_back(binding);
 			}
 		} else if (elem.get_type() == Variant::DICTIONARY) {
 			Dictionary new_dict;
@@ -827,7 +903,9 @@ void SceneState::_parse_dict(Dictionary &r_out_dict, Node *p_node, const Diction
 			_parse_array(key_arr, p_node, key);
 			key = key_arr;
 		} else if (Node *key_n = Object::cast_to<Node>(key)) {
-			key = p_node->get_path_to(key_n);
+			NodeBinding *binding = memnew(NodeBinding);
+			binding->path = p_node->get_path_to(key_n);
+			key = binding;
 		}
 
 		Variant value = p_orig_dict.get(keys[i], Variant::NIL);
@@ -841,7 +919,9 @@ void SceneState::_parse_dict(Dictionary &r_out_dict, Node *p_node, const Diction
 			_parse_array(value_arr, p_node, value);
 			value = value_arr;
 		} else if (Node *value_n = Object::cast_to<Node>(value)) {
-			value = p_node->get_path_to(value_n);
+			NodeBinding *binding = memnew(NodeBinding);
+			binding->path = p_node->get_path_to(value_n);
+			key = binding;
 		}
 
 		r_out_dict.set(key, value);
