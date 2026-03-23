@@ -29,6 +29,7 @@
 /**************************************************************************/
 
 #include "image.h"
+#include "image.compat.inc"
 
 #include "core/config/project_settings.h"
 #include "core/error/error_macros.h"
@@ -2820,19 +2821,43 @@ Vector<uint8_t> Image::save_jpg_to_buffer(float p_quality) const {
 	return save_jpg_buffer_func(Ref<Image>((Image *)this), p_quality);
 }
 
-Error Image::save_exr(const String &p_path, bool p_grayscale) const {
+Error Image::save_exr(const String &p_path, bool p_grayscale, float p_max_value) const {
 	if (save_exr_func == nullptr) {
 		return ERR_UNAVAILABLE;
 	}
 
-	return save_exr_func(p_path, Ref<Image>((Image *)this), p_grayscale);
+	// Internal to Godot, negative color values represent negative radiant energy for
+	// the purposes of lighting simulation. But for the purposes of CIE colorimetry,
+	// which is used for HDR image formats such as EXR, negative RGB values represent
+	// colors that are outside of the current RGB gamut and are positive RGB values
+	// in other color gamuts. For this reason, negative values should never be saved to
+	// EXR files for use outside of Godot's internal lighting simulation.
+	return save_exr_func(p_path, Ref<Image>((Image *)this), p_grayscale, p_max_value, true);
 }
 
-Vector<uint8_t> Image::save_exr_to_buffer(bool p_grayscale) const {
+Vector<uint8_t> Image::save_exr_to_buffer(bool p_grayscale, float p_max_value) const {
 	if (save_exr_buffer_func == nullptr) {
 		return Vector<uint8_t>();
 	}
-	return save_exr_buffer_func(Ref<Image>((Image *)this), p_grayscale);
+
+	// Internal to Godot, negative color values represent negative radiant energy for
+	// the purposes of lighting simulation. But for the purposes of CIE colorimetry,
+	// which is used for HDR image formats such as EXR, negative RGB values represent
+	// colors that are outside of the current RGB gamut and are positive RGB values
+	// in other color gamuts. For this reason, negative values should never be saved to
+	// EXR files for use outside of Godot's internal lighting simulation.
+	return save_exr_buffer_func(Ref<Image>((Image *)this), p_grayscale, p_max_value, true);
+}
+
+Error Image::save_exr_raw(const String &p_path) const {
+	if (save_exr_func == nullptr) {
+		return ERR_UNAVAILABLE;
+	}
+
+	// The saved EXR file is only valid for use internal to Godot's lighting
+	// simulation because it may include negative values that represent negative
+	// radiant energy rather than colors that are outside of the current RGB gamut.
+	return save_exr_func(p_path, Ref<Image>((Image *)this), false, -1.0, false);
 }
 
 Error Image::save_dds(const String &p_path) const {
@@ -3879,8 +3904,8 @@ void Image::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("save_png_to_buffer"), &Image::save_png_to_buffer);
 	ClassDB::bind_method(D_METHOD("save_jpg", "path", "quality"), &Image::save_jpg, DEFVAL(0.75));
 	ClassDB::bind_method(D_METHOD("save_jpg_to_buffer", "quality"), &Image::save_jpg_to_buffer, DEFVAL(0.75));
-	ClassDB::bind_method(D_METHOD("save_exr", "path", "grayscale"), &Image::save_exr, DEFVAL(false));
-	ClassDB::bind_method(D_METHOD("save_exr_to_buffer", "grayscale"), &Image::save_exr_to_buffer, DEFVAL(false));
+	ClassDB::bind_method(D_METHOD("save_exr", "path", "grayscale", "max_linear_value"), &Image::save_exr, DEFVAL(false), DEFVAL(-1.0));
+	ClassDB::bind_method(D_METHOD("save_exr_to_buffer", "grayscale", "max_linear_value"), &Image::save_exr_to_buffer, DEFVAL(false), DEFVAL(-1.0));
 	ClassDB::bind_method(D_METHOD("save_dds", "path"), &Image::save_dds);
 	ClassDB::bind_method(D_METHOD("save_dds_to_buffer"), &Image::save_dds_to_buffer);
 

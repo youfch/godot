@@ -92,7 +92,7 @@ TEST_CASE("[Image] Saving and loading") {
 	// Only available on editor builds.
 #ifdef TOOLS_ENABLED
 	// Save EXR
-	err = image->save_exr(save_path_exr, false);
+	err = image->save_exr(save_path_exr, false, -1.0f);
 	CHECK_MESSAGE(
 			err == OK,
 			"The image should be saved successfully as an .exr file.");
