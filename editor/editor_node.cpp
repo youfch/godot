@@ -2843,17 +2843,18 @@ void EditorNode::_dialog_action(String p_file) {
 		case LAYOUT_DELETE: {
 			Ref<ConfigFile> config;
 			config.instantiate();
-			Error err = config->load(EditorSettings::get_singleton()->get_editor_layouts_config());
 
+			Error err = config->load(EditorSettings::get_singleton()->get_editor_layouts_config());
 			if (err != OK || !config->has_section(p_file)) {
 				show_warning(TTR("Layout name not found!"));
 				return;
 			}
 
-			// Erase key values.
-			Vector<String> keys = config->get_section_keys(p_file);
-			for (const String &key : keys) {
-				config->set_value(p_file, key, Variant());
+			for (const String &section : config->get_sections()) {
+				// Erase sections related to the layout.
+				if (section == p_file || section.begins_with(p_file + "/")) {
+					config->erase_section(section);
+				}
 			}
 
 			config->save(EditorSettings::get_singleton()->get_editor_layouts_config());
@@ -6586,16 +6587,12 @@ void EditorNode::_layout_menu_option(int p_id) {
 	switch (p_id) {
 		case LAYOUT_SAVE: {
 			current_menu_option = p_id;
-			layout_dialog->set_title(TTR("Save Layout"));
-			layout_dialog->set_ok_button_text(TTR("Save"));
-			layout_dialog->set_name_line_enabled(true);
+			layout_dialog->set_save_mode_enabled(true);
 			layout_dialog->popup_centered();
 		} break;
 		case LAYOUT_DELETE: {
 			current_menu_option = p_id;
-			layout_dialog->set_title(TTR("Delete Layout"));
-			layout_dialog->set_ok_button_text(TTR("Delete"));
-			layout_dialog->set_name_line_enabled(false);
+			layout_dialog->set_save_mode_enabled(false);
 			layout_dialog->popup_centered();
 		} break;
 		case LAYOUT_DEFAULT: {
