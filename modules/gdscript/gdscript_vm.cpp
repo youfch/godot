@@ -653,15 +653,18 @@ Variant GDScriptFunction::call(GDScriptInstance *p_instance, const Variant **p_a
 		}
 	}
 
+	memnew_placement(&stack[ADDR_STACK_SELF], Variant);
+	memnew_placement(&stack[ADDR_STACK_CLASS], Variant);
+	memnew_placement(&stack[ADDR_STACK_NIL], Variant);
+
 	if (p_instance) {
-		memnew_placement(&stack[ADDR_STACK_SELF], Variant(p_instance->owner));
+		VariantInternal::object_assign_without_ref_unsafe(&stack[ADDR_STACK_SELF], p_instance->owner);
 		script = p_instance->script.ptr();
 	} else {
-		memnew_placement(&stack[ADDR_STACK_SELF], Variant);
 		script = _script;
 	}
-	memnew_placement(&stack[ADDR_STACK_CLASS], Variant(script));
-	memnew_placement(&stack[ADDR_STACK_NIL], Variant);
+
+	VariantInternal::object_assign_without_ref_unsafe(&stack[ADDR_STACK_CLASS], script);
 
 	String err_text;
 
@@ -4009,7 +4012,7 @@ Variant GDScriptFunction::call(GDScriptInstance *p_instance, const Variant **p_a
 		GDScriptLanguage::get_singleton()->exit_function();
 	}
 
-	for (int i = 0; i < _stack_size; i++) {
+	for (int i = FIXED_ADDRESSES_MAX; i < _stack_size; i++) {
 		stack[i].~Variant();
 	}
 
