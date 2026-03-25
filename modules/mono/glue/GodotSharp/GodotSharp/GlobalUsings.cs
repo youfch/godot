@@ -4,6 +4,10 @@ global using real_t = System.Double;
 global using real_t = System.Single;
 #endif
 
+global using unsafe ConstructorTrampolineDelegate = delegate* managed<
+    /* godotObjectPtr: */ System.IntPtr,
+    /* args: */ Godot.NativeInterop.NativeVariantPtrArgs,
+    /* return */ Godot.GodotObject>;
 global using unsafe MethodTrampolineDelegate = delegate* managed<
     /* godotObject: */ object,
     /* args: */ Godot.NativeInterop.NativeVariantPtrArgs,
@@ -20,3 +24,6 @@ global using unsafe RaiseSignalTrampolineDelegate = delegate* managed<
     /* godotObject: */ object,
     /* args: */ Godot.NativeInterop.NativeVariantPtrArgs,
     /* return */ void>;
+global using unsafe BuiltInConstructorTrampolineDelegate = delegate* managed<
+    /* godotObjectPtr: */ System.IntPtr,
+    /* return */ Godot.GodotObject>;
