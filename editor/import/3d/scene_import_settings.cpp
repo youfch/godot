@@ -431,6 +431,10 @@ void SceneImportSettingsDialog::_fill_scene(Node *p_node, TreeItem *p_parent_ite
 
 	item->set_selectable(0, true);
 
+	if (scene_tree_filter_bar) {
+		scene_tree_filter_bar->clear();
+	}
+
 	if (!node_map.has(import_id)) {
 		NodeData nd;
 
@@ -1235,6 +1239,11 @@ void SceneImportSettingsDialog::_on_light_rotate_switch_pressed() {
 	light2->set_as_top_level_keep_local(light_top_level);
 }
 
+void SceneImportSettingsDialog::_on_tree_tab_changed(int p_tab_id) {
+	scene_tree_filter_bar->managed_tree = static_cast<Tree *>(data_mode->get_tab_control(p_tab_id));
+	scene_tree_filter_bar->clear();
+}
+
 void SceneImportSettingsDialog::_viewport_input(const Ref<InputEvent> &p_input) {
 	float *rot_x = &cam_rot_x;
 	float *rot_y = &cam_rot_y;
@@ -1711,16 +1720,27 @@ SceneImportSettingsDialog::SceneImportSettingsDialog() {
 	main_vb->add_child(tree_split);
 	tree_split->set_v_size_flags(Control::SIZE_EXPAND_FILL);
 
+	VBoxContainer *data_mode_vbc = memnew(VBoxContainer);
+	tree_split->add_child(data_mode_vbc);
+	data_mode_vbc->set_anchors_and_offsets_preset(Control::LayoutPreset::PRESET_FULL_RECT);
+
+	// need to assign the default Tree memory space
+	scene_tree = memnew(Tree);
+	scene_tree_filter_bar = memnew(TreeSortAndFilterBar(scene_tree, TTRC("Filter")));
+	data_mode_vbc->add_child(scene_tree_filter_bar);
+	scene_tree_filter_bar->add_sort_option(TTRC("Name"), TreeSortAndFilterBar::SortType::ALPHA_SORT, 0);
+
 	data_mode = memnew(TabContainer);
-	tree_split->add_child(data_mode);
+	data_mode_vbc->add_child(data_mode);
 	data_mode->set_custom_minimum_size(Size2(300 * EDSCALE, 0));
 	data_mode->set_theme_type_variation("TabContainerOdd");
+	data_mode->set_v_size_flags(Control::SIZE_EXPAND_FILL);
+	data_mode->connect("tab_changed", callable_mp(this, &SceneImportSettingsDialog::_on_tree_tab_changed));
 
 	property_split = memnew(HSplitContainer);
 	tree_split->add_child(property_split);
 	property_split->set_h_size_flags(Control::SIZE_EXPAND_FILL);
 
-	scene_tree = memnew(Tree);
 	scene_tree->set_name(TTR("Scene"));
 	scene_tree->set_auto_translate_mode(AUTO_TRANSLATE_MODE_DISABLED);
 	data_mode->add_child(scene_tree);

@@ -46,6 +46,8 @@
 #include "scene/resources/3d/primitive_meshes.h"
 #include "scene/resources/3d/sky_material.h"
 
+#include "modules/objectdb_profiler/editor/data_viewers/shared_controls.h"
+
 class EditorFileDialog;
 class EditorInspector;
 class SceneImportSettingsData;
@@ -70,6 +72,8 @@ class SceneImportSettingsDialog : public ConfirmationDialog {
 	Tree *scene_tree = nullptr;
 	Tree *mesh_tree = nullptr;
 	Tree *material_tree = nullptr;
+
+	TreeSortAndFilterBar *scene_tree_filter_bar = nullptr;
 
 	EditorInspector *inspector = nullptr;
 
@@ -198,6 +202,7 @@ class SceneImportSettingsDialog : public ConfirmationDialog {
 	void _on_light_1_switch_pressed();
 	void _on_light_2_switch_pressed();
 	void _on_light_rotate_switch_pressed();
+	void _on_tree_tab_changed(int p_tab_id);
 
 	void _viewport_input(const Ref<InputEvent> &p_input);
 
