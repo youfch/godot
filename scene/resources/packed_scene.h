@@ -78,6 +78,7 @@ class SceneState : public RefCounted {
 		ObjectID base;
 		StringName property;
 		Variant value;
+		const NodeData *nd;
 	};
 
 	Vector<NodeData> nodes;
@@ -94,8 +95,8 @@ class SceneState : public RefCounted {
 
 	Vector<ConnectionData> connections;
 
-	void _parse_dict(Dictionary &r_out_dict, Node *p_node, const Dictionary &p_orig_dict);
-	void _parse_array(Array &r_out_array, Node *p_node, const Array &p_orig_array);
+	void _parse_dict(Dictionary &r_out_dict, Node *p_node, const Dictionary &p_orig_dict, bool &r_has_binding);
+	void _parse_array(Array &r_out_array, Node *p_node, const Array &p_orig_array, bool &r_has_binding);
 	Error _parse_node(Node *p_owner, Node *p_node, int p_parent_idx, HashMap<StringName, int> &name_map, HashMap<Variant, int> &variant_map, HashMap<Node *, int> &node_map, HashMap<Node *, int> &nodepath_map, HashSet<int32_t> &ids_saved);
 	Error _parse_connections(Node *p_owner, Node *p_node, HashMap<StringName, int> &name_map, HashMap<Variant, int> &variant_map, HashMap<Node *, int> &node_map, HashMap<Node *, int> &nodepath_map);
 
@@ -166,9 +167,9 @@ public:
 	bool can_instantiate() const;
 	Node *instantiate(GenEditState p_edit_state) const;
 
-	Array setup_resources_in_array(Array &p_array_to_scan, const SceneState::NodeData &p_n, HashMap<Ref<Resource>, Ref<Resource>> &p_resources_local_to_sub_scene, Node *p_node, const StringName p_sname, HashMap<Ref<Resource>, Ref<Resource>> &p_resources_local_to_scene, int p_i, Node **p_ret_nodes, SceneState::GenEditState p_edit_state, bool &r_has_bindings) const;
-	Array bind_deferred_node_paths_in_array(const Array &p_array_to_scan, const Node *p_base_node, bool p_should_bind_paths) const;
-	Dictionary setup_resources_in_dictionary(const Dictionary &p_dictionary_to_scan, const SceneState::NodeData &p_n, HashMap<Ref<Resource>, Ref<Resource>> &p_resources_local_to_sub_scene, Node *p_node, const StringName p_sname, HashMap<Ref<Resource>, Ref<Resource>> &p_resources_local_to_scene, int p_i, Node **p_ret_nodes, SceneState::GenEditState p_edit_state, bool &r_has_bindings) const;
+	Array setup_resources_in_array(Array &p_array_to_scan, const SceneState::NodeData &p_n, HashMap<Ref<Resource>, Ref<Resource>> &p_resources_local_to_sub_scene, Node *p_node, const StringName p_sname, HashMap<Ref<Resource>, Ref<Resource>> &p_resources_local_to_scene, int p_i, Node **p_ret_nodes, SceneState::GenEditState p_edit_state) const;
+	Array bind_deferred_node_paths_in_array(const Array &p_array_to_scan, const Node *p_base_node) const;
+	Dictionary setup_resources_in_dictionary(const Dictionary &p_dictionary_to_scan, const SceneState::NodeData &p_n, HashMap<Ref<Resource>, Ref<Resource>> &p_resources_local_to_sub_scene, Node *p_node, const StringName p_sname, HashMap<Ref<Resource>, Ref<Resource>> &p_resources_local_to_scene, int p_i, Node **p_ret_nodes, SceneState::GenEditState p_edit_state) const;
 	Dictionary bind_deferred_node_paths_in_dictionary(const Dictionary &p_dictionary_to_scan, const Node *p_base_node) const;
 	Variant bind_node_paths(const Variant p_var, const Node *p_base_node, bool p_should_bind_paths) const;
 	Variant make_local_resource(Variant &value, const SceneState::NodeData &p_node_data, HashMap<Ref<Resource>, Ref<Resource>> &p_resources_local_to_sub_scene, Node *p_node, const StringName p_sname, HashMap<Ref<Resource>, Ref<Resource>> &p_resources_local_to_scene, int p_i, Node **p_ret_nodes, SceneState::GenEditState p_edit_state) const;
