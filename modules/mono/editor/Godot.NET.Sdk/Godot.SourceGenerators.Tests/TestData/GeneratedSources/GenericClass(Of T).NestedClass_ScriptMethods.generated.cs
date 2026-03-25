@@ -14,6 +14,12 @@ partial class NestedClass
     public new class MethodName : global::Godot.GodotObject.MethodName
     {
     }
+    private static partial class GodotInternal
+    {
+        public new static unsafe void GetGodotMethodTrampolines(global::Godot.Bridge.ScriptManagerBridge.MethodTrampolineCollector collector)
+        {
+        }
+    }
 #pragma warning restore CS0109
 
 }
