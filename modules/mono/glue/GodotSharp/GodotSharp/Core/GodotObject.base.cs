@@ -20,7 +20,7 @@ namespace Godot
         internal IntPtr NativePtr;
         private bool _memoryOwn;
 
-        private WeakReference<GodotObject>? _weakReferenceToSelf;
+        private DisposablesTracker.Element<WeakReference<GodotObject>>? _weakReferenceToSelf;
 
 #if DEBUG
         private StackTrace? _disposeStackTrace;
