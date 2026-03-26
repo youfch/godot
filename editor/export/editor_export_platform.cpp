@@ -1183,7 +1183,7 @@ Dictionary EditorExportPlatform::get_internal_export_files(const Ref<EditorExpor
 					break;
 				}
 			}
-			if (TS->is_locale_using_support_data(get_project_setting(p_preset, "internationalization/locale/fallback"))) {
+			if (get_project_setting(p_preset, "internationalization/locale/allow_fallback") && TS->is_locale_using_support_data(get_project_setting(p_preset, "internationalization/locale/fallback"))) {
 				include_data = true;
 			}
 		}
