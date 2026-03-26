@@ -286,7 +286,7 @@ namespace Godot.SourceGenerators
                     .Append(";\n");
 
                 source.Append(
-                    $"    /// <inheritdoc cref=\"{signalDelegate.DelegateSymbol.FullQualifiedNameIncludeGlobal()}\"/>\n");
+                    $"    /// <inheritdoc cref=\"{signalDelegate.DelegateSymbol.FullQualifiedNameIncludeGlobal().Replace('<', '{').Replace('>', '}')}\"/>\n");
 
                 source.Append($"    {signalDelegate.DelegateSymbol.GetAccessibilityKeyword()} event ")
                     .Append(signalDelegate.DelegateSymbol.FullQualifiedNameIncludeGlobal())
@@ -456,7 +456,7 @@ namespace Godot.SourceGenerators
                 .Append(methodInfo.Name)
                 .Append(", returnVal: ");
 
-            AppendPropertyInfo(source, methodInfo.ReturnVal);
+            source.AppendPropertyInfo(methodInfo.ReturnVal, "\"{0}\"");
 
             source.Append(", flags: (global::Godot.MethodFlags)")
                 .Append((int)methodInfo.Flags)
@@ -468,7 +468,7 @@ namespace Godot.SourceGenerators
 
                 foreach (var param in methodInfo.Arguments)
                 {
-                    AppendPropertyInfo(source, param);
+                    source.AppendPropertyInfo(param, "\"{0}\"");
 
                     // C# allows colon after the last element
                     source.Append(", ");
@@ -482,29 +482,6 @@ namespace Godot.SourceGenerators
             }
 
             source.Append(", defaultArguments: null));\n");
-        }
-
-        private static void AppendPropertyInfo(StringBuilder source, PropertyInfo propertyInfo)
-        {
-            source.Append("new(type: (global::Godot.Variant.Type)")
-                .Append((int)propertyInfo.Type)
-                .Append(", name: \"")
-                .Append(propertyInfo.Name)
-                .Append("\", hint: (global::Godot.PropertyHint)")
-                .Append((int)propertyInfo.Hint)
-                .Append(", hintString: \"")
-                .Append(propertyInfo.HintString)
-                .Append("\", usage: (global::Godot.PropertyUsageFlags)")
-                .Append((int)propertyInfo.Usage)
-                .Append(", exported: ")
-                .Append(propertyInfo.Exported ? "true" : "false");
-            if (propertyInfo.ClassName != null)
-            {
-                source.Append(", className: new global::Godot.StringName(\"")
-                    .Append(propertyInfo.ClassName)
-                    .Append("\")");
-            }
-            source.Append(")");
         }
 
         private static MethodInfo DetermineMethodInfo(GodotSignalDelegateData signalDelegateData)
@@ -521,7 +498,7 @@ namespace Godot.SourceGenerators
             }
             else
             {
-                returnVal = new PropertyInfo(VariantType.Nil, string.Empty, PropertyHint.None,
+                returnVal = new PropertyInfo(VariantType.Nil, null, string.Empty, PropertyHint.None,
                     hintString: null, PropertyUsageFlags.Default, exported: false);
             }
 
@@ -551,7 +528,7 @@ namespace Godot.SourceGenerators
 
         private static PropertyInfo DeterminePropertyInfo(MarshalType marshalType, ITypeSymbol typeSymbol, string name)
         {
-            var memberVariantType = MarshalUtils.ConvertMarshalTypeToVariantType(marshalType)!.Value;
+            var memberVariantType = MarshalUtils.ConvertMarshalTypeToVariantType(marshalType);
 
             var propUsage = PropertyUsageFlags.Default;
 
@@ -564,7 +541,7 @@ namespace Godot.SourceGenerators
                 className = namedTypeSymbol.GetGodotScriptNativeClassName();
             }
 
-            return new PropertyInfo(memberVariantType, name,
+            return new PropertyInfo(memberVariantType, typeSymbol, name,
                 PropertyHint.None, string.Empty, propUsage, className, exported: false);
         }
     }
