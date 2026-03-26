@@ -1092,11 +1092,12 @@ namespace Godot
         /// <returns>The added color.</returns>
         public static Color operator +(Color left, Color right)
         {
-            left.R += right.R;
-            left.G += right.G;
-            left.B += right.B;
-            left.A += right.A;
-            return left;
+            Color v;
+            v.R = left.R + right.R;
+            v.G = left.G + right.G;
+            v.B = left.B + right.B;
+            v.A = left.A + right.A;
+            return v;
         }
 
         /// <summary>
@@ -1108,11 +1109,12 @@ namespace Godot
         /// <returns>The subtracted color.</returns>
         public static Color operator -(Color left, Color right)
         {
-            left.R -= right.R;
-            left.G -= right.G;
-            left.B -= right.B;
-            left.A -= right.A;
-            return left;
+            Color v;
+            v.R = left.R - right.R;
+            v.G = left.G - right.G;
+            v.B = left.B - right.B;
+            v.A = left.A - right.A;
+            return v;
         }
 
         /// <summary>
@@ -1145,11 +1147,12 @@ namespace Godot
         /// <returns>The multiplied color.</returns>
         public static Color operator *(Color color, float scale)
         {
-            color.R *= scale;
-            color.G *= scale;
-            color.B *= scale;
-            color.A *= scale;
-            return color;
+            Color v;
+            v.R = color.R * scale;
+            v.G = color.G * scale;
+            v.B = color.B * scale;
+            v.A = color.A * scale;
+            return v;
         }
 
         /// <summary>
@@ -1161,11 +1164,12 @@ namespace Godot
         /// <returns>The multiplied color.</returns>
         public static Color operator *(float scale, Color color)
         {
-            color.R *= scale;
-            color.G *= scale;
-            color.B *= scale;
-            color.A *= scale;
-            return color;
+            Color v;
+            v.R = color.R * scale;
+            v.G = color.G * scale;
+            v.B = color.B * scale;
+            v.A = color.A * scale;
+            return v;
         }
 
         /// <summary>
@@ -1177,11 +1181,12 @@ namespace Godot
         /// <returns>The multiplied color.</returns>
         public static Color operator *(Color left, Color right)
         {
-            left.R *= right.R;
-            left.G *= right.G;
-            left.B *= right.B;
-            left.A *= right.A;
-            return left;
+            Color v;
+            v.R = left.R * right.R;
+            v.G = left.G * right.G;
+            v.B = left.B * right.B;
+            v.A = left.A * right.A;
+            return v;
         }
 
         /// <summary>
@@ -1193,11 +1198,12 @@ namespace Godot
         /// <returns>The divided color.</returns>
         public static Color operator /(Color color, float scale)
         {
-            color.R /= scale;
-            color.G /= scale;
-            color.B /= scale;
-            color.A /= scale;
-            return color;
+            Color v;
+            v.R = color.R / scale;
+            v.G = color.G / scale;
+            v.B = color.B / scale;
+            v.A = color.A / scale;
+            return v;
         }
 
         /// <summary>
@@ -1209,11 +1215,12 @@ namespace Godot
         /// <returns>The divided color.</returns>
         public static Color operator /(Color left, Color right)
         {
-            left.R /= right.R;
-            left.G /= right.G;
-            left.B /= right.B;
-            left.A /= right.A;
-            return left;
+            Color v;
+            v.R = left.R / right.R;
+            v.G = left.G / right.G;
+            v.B = left.B / right.B;
+            v.A = left.A / right.A;
+            return v;
         }
 
         /// <summary>
