@@ -231,6 +231,9 @@ struct SceneData {
 	float luminance_multiplier;
 	uint camera_visible_layers;
 	bool pancake_shadows;
+
+	bool debug_draw_unshaded;
+	uint pad[3];
 };
 
 // The containing data block is for historic reasons.
@@ -1202,6 +1205,9 @@ struct SceneData {
 	float luminance_multiplier;
 	uint camera_visible_layers;
 	bool pancake_shadows;
+
+	bool debug_draw_unshaded;
+	uint pad[3];
 };
 
 layout(std140) uniform SceneDataBlock { // ubo:2
@@ -2132,6 +2138,10 @@ void main() {
 	vec2 user_motion_v;
 	{
 #CODE : FRAGMENT
+	}
+
+	if (scene_data_block.data.debug_draw_unshaded) {
+		metallic = 0.0;
 	}
 
 	// Keep albedo values in positive number range as negative values "wraparound" into positive numbers resulting in wrong colors
