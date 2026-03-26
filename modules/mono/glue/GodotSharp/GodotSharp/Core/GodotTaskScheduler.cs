@@ -90,7 +90,7 @@ namespace Godot
                 {
                     if (_tasks.Count > 0)
                     {
-                        task = _tasks.First.Value;
+                        task = _tasks.First!.Value;
                         _tasks.RemoveFirst();
                     }
                     else

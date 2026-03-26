@@ -5,8 +5,6 @@ using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text.Json.Serialization;
 
-#nullable enable
-
 namespace Godot
 {
     /// <summary>

@@ -8,8 +8,6 @@ using System.Threading;
 
 namespace Godot.Bridge;
 
-#nullable enable
-
 public static partial class ScriptManagerBridge
 {
     [SuppressMessage("Design", "CA1001", MessageId = "Types that own disposable fields should be disposable",

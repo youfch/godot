@@ -3,8 +3,6 @@ using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using Godot.NativeInterop;
 
-#nullable enable
-
 namespace Godot
 {
     /// <summary>
