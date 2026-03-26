@@ -104,6 +104,7 @@ public:
 
 	virtual void set_anisotropic_filtering_level(RSE::ViewportAnisotropicFiltering p_anisotropic_filtering_level) override {}
 	virtual void set_fsr_sharpness(float p_fsr_sharpness) override {}
+	virtual void set_fsr_auto_generate_reactive(bool p_fsr_auto_generate_reactive) override {}
 	virtual void set_texture_mipmap_bias(float p_texture_mipmap_bias) override {}
 	virtual void set_use_debanding(bool p_use_debanding) override {}
 	void set_apply_environment_effects_in_post(bool p_apply_environment_effects_in_post);
