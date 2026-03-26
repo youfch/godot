@@ -893,7 +893,7 @@ LightmapGI::BakeError LightmapGI::_save_and_reimport_atlas_textures(const Ref<Li
 		if (p_is_shadowmask) {
 			save_err = texture_image->save_png(atlas_path);
 		} else {
-			save_err = texture_image->save_exr(atlas_path, false);
+			save_err = texture_image->save_exr_raw(atlas_path);
 		}
 
 		ERR_FAIL_COND_V(save_err, LightmapGI::BAKE_ERROR_CANT_CREATE_IMAGE);

@@ -1,0 +1,7 @@
+GH-117800
+--------------
+
+Validate extension JSON: Error: Field 'classes/Image/methods/save_exr/arguments': size changed value in new API, from 2 to 3.
+Validate extension JSON: Error: Field 'classes/Image/methods/save_exr_to_buffer/arguments': size changed value in new API, from 1 to 2.
+
+Added max_linear_value parameter to Image.save_exr functions. Use the default value of -1.0 for previous behavior.

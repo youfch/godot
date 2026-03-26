@@ -1268,7 +1268,7 @@ LightmapperRD::BakeError LightmapperRD::bake(BakeQuality p_quality, bool p_use_d
 			light_environment_tex = rd->texture_create(tfp, RD::TextureView(), tdata);
 
 #ifdef DEBUG_TEXTURES
-			panorama_tex->save_exr("res://0_panorama.exr", false);
+			panorama_tex->save_exr_raw("res://0_panorama.exr");
 #endif
 		}
 	}
@@ -1532,11 +1532,11 @@ LightmapperRD::BakeError LightmapperRD::bake(BakeQuality p_quality, bool p_use_d
 	for (int i = 0; i < atlas_slices; i++) {
 		Vector<uint8_t> s = rd->texture_get_data(position_tex, i);
 		Ref<Image> img = Image::create_from_data(atlas_size.width, atlas_size.height, false, Image::FORMAT_RGBAF, s);
-		img->save_exr("res://1_position_" + itos(i) + ".exr", false);
+		img->save_exr_raw("res://1_position_" + itos(i) + ".exr");
 
 		s = rd->texture_get_data(normal_tex, i);
 		img->set_data(atlas_size.width, atlas_size.height, false, Image::FORMAT_RGBAH, s);
-		img->save_exr("res://1_normal_" + itos(i) + ".exr", false);
+		img->save_exr_raw("res://1_normal_" + itos(i) + ".exr");
 	}
 #endif
 
@@ -1668,7 +1668,7 @@ LightmapperRD::BakeError LightmapperRD::bake(BakeQuality p_quality, bool p_use_d
 	for (int i = 0; i < atlas_slices; i++) {
 		Vector<uint8_t> s = rd->texture_get_data(unocclude_tex, i);
 		Ref<Image> img = Image::create_from_data(atlas_size.width, atlas_size.height, false, Image::FORMAT_RGBAF, s);
-		img->save_exr("res://1_unocclude_" + itos(i) + ".exr", false);
+		img->save_exr_raw("res://1_unocclude_" + itos(i) + ".exr");
 	}
 #endif
 
@@ -1812,14 +1812,14 @@ LightmapperRD::BakeError LightmapperRD::bake(BakeQuality p_quality, bool p_use_d
 	for (int i = 0; i < atlas_slices; i++) {
 		Vector<uint8_t> s = rd->texture_get_data(light_source_tex, i);
 		Ref<Image> img = Image::create_from_data(atlas_size.width, atlas_size.height, false, Image::FORMAT_RGBAH, s);
-		img->save_exr("res://2_light_primary_" + itos(i) + ".exr", false);
+		img->save_exr_raw("res://2_light_primary_" + itos(i) + ".exr");
 	}
 
 	if (p_bake_sh) {
 		for (int i = 0; i < atlas_slices * 4; i++) {
 			Vector<uint8_t> s = rd->texture_get_data(light_accum_tex, i);
 			Ref<Image> img = Image::create_from_data(atlas_size.width, atlas_size.height, false, Image::FORMAT_RGBAH, s);
-			img->save_exr("res://2_light_primary_accum_" + itos(i) + ".exr", false);
+			img->save_exr_raw("res://2_light_primary_accum_" + itos(i) + ".exr");
 		}
 	}
 #endif
@@ -2150,7 +2150,7 @@ LightmapperRD::BakeError LightmapperRD::bake(BakeQuality p_quality, bool p_use_d
 	for (int i = 0; i < atlas_slices * (p_bake_sh ? 4 : 1); i++) {
 		Vector<uint8_t> s = rd->texture_get_data(light_accum_tex, i);
 		Ref<Image> img = Image::create_from_data(atlas_size.width, atlas_size.height, false, Image::FORMAT_RGBAH, s);
-		img->save_exr("res://4_light_secondary_" + itos(i) + ".exr", false);
+		img->save_exr_raw("res://4_light_secondary_" + itos(i) + ".exr");
 	}
 #endif
 
@@ -2308,7 +2308,7 @@ LightmapperRD::BakeError LightmapperRD::bake(BakeQuality p_quality, bool p_use_d
 	for (int i = 0; i < atlas_slices * (p_bake_sh ? 4 : 1); i++) {
 		Vector<uint8_t> s = rd->texture_get_data(light_accum_tex, i);
 		Ref<Image> img = Image::create_from_data(atlas_size.width, atlas_size.height, false, Image::FORMAT_RGBAH, s);
-		img->save_exr("res://5_blendseams" + itos(i) + ".exr", false);
+		img->save_exr_raw("res://5_blendseams" + itos(i) + ".exr");
 	}
 #endif
 
@@ -2341,7 +2341,7 @@ LightmapperRD::BakeError LightmapperRD::bake(BakeQuality p_quality, bool p_use_d
 #ifdef DEBUG_TEXTURES
 		{
 			Ref<Image> img2 = Image::create_from_data(probe_values.size(), 1, false, Image::FORMAT_RGBAF, probe_data);
-			img2->save_exr("res://6_lightprobes.exr", false);
+			img2->save_exr_raw("res://6_lightprobes.exr");
 		}
 #endif
 	}
