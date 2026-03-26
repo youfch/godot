@@ -466,7 +466,7 @@ window.addEventListener('load', () => {
 	}
 });
 
-function closeWelcomeModal(dontShowAgain) { // eslint-disable-line no-unused-vars
+function closeWelcomeModal(dontShowAgain) {
 	document.getElementById('welcome-modal').style.display = 'none';
 	if (dontShowAgain) {
 		localStorage.setItem('welcomeModalDismissed', 'true');
@@ -480,7 +480,7 @@ let game = null;
 let setStatusMode;
 let setStatusNotice;
 
-function clearPersistence() { // eslint-disable-line no-unused-vars
+function clearPersistence() {
 	function deleteDB(path) {
 		return new Promise(function (resolve, reject) {
 			const req = indexedDB.deleteDatabase(path);
@@ -551,7 +551,7 @@ function closeGame() {
 	}
 }
 
-function closeEditor() { // eslint-disable-line no-unused-vars
+function closeEditor() {
 	closeGame();
 	if (editor) {
 		editor.requestQuit();
