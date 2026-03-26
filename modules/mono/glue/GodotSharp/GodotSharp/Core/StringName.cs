@@ -52,7 +52,7 @@ namespace Godot
 
         // Explicit name to make it very clear
         internal static StringName CreateTakingOwnershipOfDisposableValue(godot_string_name nativeValueToOwn)
-            => new StringName(nativeValueToOwn);
+            => nativeValueToOwn.IsAllocated ? new StringName(nativeValueToOwn) : null;
 
         internal void TakeOwnershipOfDisposableValue(godot_string_name nativeValueToOwn)
         {
