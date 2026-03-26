@@ -123,6 +123,7 @@ void CSharpLanguage::init() {
 #endif // DEBUG_ENABLED
 
 	GLOBAL_DEF("dotnet/project/assembly_name", "");
+	GLOBAL_DEF("dotnet/project/data_directory", "data_{app_name}_{platform}_{arch}");
 #ifdef TOOLS_ENABLED
 	GLOBAL_DEF("dotnet/project/solution_directory", "");
 	GLOBAL_DEF("dotnet/project/project_directory", "");
