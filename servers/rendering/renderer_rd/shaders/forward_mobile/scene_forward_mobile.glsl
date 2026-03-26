@@ -1286,7 +1286,7 @@ void main() {
 	vec2 point_coord = vec2(0.5);
 #endif
 #endif
-
+	vec2 user_motion_v;
 	{
 #CODE : FRAGMENT
 	}
