@@ -267,6 +267,7 @@ public:
 protected:
 	virtual void cancel_pressed() override;
 	virtual void ok_pressed() override;
+	void _notification(int p_what);
 	void item_pressed(bool p_double_click);
 	void selection_changed();
 
