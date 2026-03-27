@@ -107,7 +107,6 @@ protected:
 
 	LineEdit *filter_edit = nullptr;
 	MenuButton *sort_button = nullptr;
-	Tree *managed_tree = nullptr;
 	HashMap<int, SortItem> sort_items;
 	int current_sort = 0;
 
@@ -117,6 +116,8 @@ protected:
 	void _filter_changed(const String &p_filter);
 
 public:
+	Tree *managed_tree = nullptr;
+
 	TreeSortAndFilterBar(Tree *p_managed_tree, const String &p_filter_placeholder_text);
 	void _notification(int p_what);
 	SortOptionIndexes add_sort_option(const String &p_new_option, SortType p_sort_type, int p_sort_column, bool p_is_default = false);
